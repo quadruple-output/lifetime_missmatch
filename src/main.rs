@@ -15,10 +15,10 @@ struct VariantWithContext<'a> {
     variant: Variant,
 }
 
-trait GenericVariant<'a> {
+trait GenericVariant {
     //...
 }
-impl<'a> GenericVariant<'a> for VariantWithContext<'a> {}
+impl<'a> GenericVariant for VariantWithContext<'a> {}
 
 struct Variants {
     inner: Vec<Variant>,
