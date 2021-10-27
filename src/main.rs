@@ -1,77 +1,55 @@
-type Fraction = f32;
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+struct Context {
+    //...
+}
 
 #[derive(Clone, Copy)]
 enum Variant {
-    Velocity {
-        v_ref: usize,
-    },
-    AccelerationDt {
-        factor: f32,
-        a_ref: usize,
-        dt_fraction: Fraction,
-    },
+    Var1,
 }
 
-impl Variant {
-    pub fn abstraction_scaled_for<'variant, 'step>(
-        &'variant self,
-        step: &'step Step,
-        fraction: Fraction,
-    ) -> Abstraction<'step> {
-        todo!()
-    }
-}
-
-struct Abstraction<'a> {
-    step: &'a Step,
+struct VariantWithContext<'a> {
+    ctx: &'a Context,
     variant: Variant,
 }
 
-impl<'a> Contribution<'a> for Abstraction<'a> {
-    fn contributions_iter(&'a self) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a> {
-        todo!()
-    }
+trait GenericVariant<'a> {
+    //...
 }
+impl<'a> GenericVariant<'a> for VariantWithContext<'a> {}
 
-struct Step {
-    dt: f32,
-}
-
-trait Contribution<'a> {
-    // fn sampling_position(&self) -> Position;
-
-    // fn kind(&self) -> PhysicalQuantityKind;
-
-    // fn vector(&self) -> Option<Vec3>;
-
-    // fn contributions_factor(&self) -> f32;
-
-    fn contributions_iter(&'a self) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'a>> + 'a>;
-}
-
-fn main() {
-    println!("Hello, world!");
-}
-
-struct Generic {
-    fraction: Fraction,
+struct Variants {
     inner: Vec<Variant>,
 }
 
-impl Generic {
-    fn abstraction_iter_for<'collection, 'step>(
-        &'collection self,
-        step: &'step Step,
-    ) -> Box<dyn Iterator<Item = Box<dyn Contribution + 'step>> + 'collection>
+impl Variants {
+    fn iter_with_context<'slf, 'ctx>(
+        &'slf self,
+        ctx: &'ctx Context,
+    ) -> Box<dyn Iterator<Item = Box<dyn GenericVariant + 'ctx>> + 'slf>
     where
-        'step: 'collection,
+        'ctx: 'slf,
     {
-        let f = self.fraction;
         Box::new(self.inner.iter().cloned().map(|variant| {
-            let abstraction: Abstraction<'step> = variant.abstraction_scaled_for(step, f);
-            let box_step: Box<Abstraction<'step>> = Box::new(abstraction);
-            let dyn_box: Box<dyn Contribution + 'step> = box_step;
+            let abstraction: VariantWithContext<'ctx> = variant.with_context(ctx);
+            let box_step: Box<VariantWithContext<'ctx>> = Box::new(abstraction);
+            let dyn_box: Box<dyn GenericVariant + 'ctx> = box_step;
             dyn_box
         }))
     }
+}
+
+impl Variant {
+    pub fn with_context<'slf, 'ctx>(&'slf self, ctx: &'ctx Context) -> VariantWithContext<'ctx> {
+        VariantWithContext {
+            ctx,
+            variant: *self,
+        }
+    }
+}
+
+fn main() {
+    todo!()
 }
